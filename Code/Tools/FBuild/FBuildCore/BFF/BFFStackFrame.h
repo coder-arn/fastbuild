@@ -51,8 +51,11 @@ public:
 	// get a variable by name, either user or system
 	static const BFFVariable * GetVarAny( const AString & name );
 
-	// get all variables ar this stack level only
+	// get all variables at this stack level only
 	const Array< const BFFVariable * > & GetLocalVariables() const { RETURN_CONSTIFIED_BFF_VARIABLE_ARRAY( m_Variables ); }
+
+	// get a variable at this stack level only
+	const BFFVariable * GetLocalVar( const AString & name ) const;
 
 	static BFFStackFrame * GetCurrent() { return s_StackHead; }
 
@@ -64,6 +67,8 @@ private:
 
 	const BFFVariable * GetVariableRecurse( const AString & nameOnly, 
 									  BFFVariable::VarType type ) const;
+
+	const BFFVariable * GetVarNoRecurse( const AString & name ) const;
 	BFFVariable * GetVarMutableNoRecurse( const AString & name );
 
 	// variables at current scope
