@@ -233,10 +233,16 @@ bool BFFParser::ParseVariableDeclaration( BFFIterator & iter, const BFFIterator 
 
 	// look for an appropriate operator
 	BFFIterator operatorIter( iter );
+	bool optional = false;
 	bool concatenation = false;
 	if ( *iter == BFF_VARIABLE_ASSIGNMENT )
 	{
 		// assignment
+	}
+	else if ( *iter == BFF_VARIABLE_ASSIGNMENT_OPTIONAL )
+	{
+		// optional assignment
+		optional = true;
 	}
 	else if ( *iter == BFF_VARIABLE_CONCATENATION )
 	{
@@ -308,7 +314,7 @@ bool BFFParser::ParseVariableDeclaration( BFFIterator & iter, const BFFIterator 
 			Error::Error_1018_IntegerValueCouldNotBeParsed( startIntValue );
 			return false;
 		}
-		return StoreVariableInt( varNameStart.GetCurrent(), varNameEnd.GetCurrent(), i );
+		return StoreVariableInt( varNameStart.GetCurrent(), varNameEnd.GetCurrent(), i, optional );
 	}
 	else if ( ( *iter == 't' ) || ( *iter == 'f' ) )
 	{
@@ -327,7 +333,7 @@ bool BFFParser::ParseVariableDeclaration( BFFIterator & iter, const BFFIterator 
 						Error::Error_1027_CannotConcatenate( operatorIter, varName, BFFVariable::VAR_ANY, BFFVariable::VAR_BOOL );
 						return false;
 					}
-					return StoreVariableBool( varNameStart.GetCurrent(), varNameEnd.GetCurrent(), true );
+					return StoreVariableBool( varNameStart.GetCurrent(), varNameEnd.GetCurrent(), true, optional );
 				}
 				else if ( value == "false" )
 				{
@@ -336,7 +342,7 @@ bool BFFParser::ParseVariableDeclaration( BFFIterator & iter, const BFFIterator 
 						Error::Error_1027_CannotConcatenate( operatorIter, varName, BFFVariable::VAR_ANY, BFFVariable::VAR_BOOL );
 						return false;
 					}
-					return StoreVariableBool( m_LastVarNameStart.GetCurrent(), m_LastVarNameEnd.GetCurrent(), false );
+					return StoreVariableBool( m_LastVarNameStart.GetCurrent(), m_LastVarNameEnd.GetCurrent(), false, optional );
 				}
 			}
 		}
@@ -355,7 +361,7 @@ bool BFFParser::ParseVariableDeclaration( BFFIterator & iter, const BFFIterator 
 		}
 		iter.SkipVariableName();
 		return StoreVariableToVariable( varNameStart.GetCurrent(), varNameEnd.GetCurrent(), 
-										varNameStartSrc, iter, operatorIter );
+										varNameStartSrc, iter, operatorIter, optional );
 	}
 	
 	if ( !ok )
@@ -375,7 +381,7 @@ bool BFFParser::ParseVariableDeclaration( BFFIterator & iter, const BFFIterator 
 		if ( iter.ParseToMatchingBrace( openToken, closeToken ) )
 		{
 			result = StoreVariableArray( varNameStart.GetCurrent(), varNameEnd.GetCurrent(), 
-										 openTokenPos, iter, operatorIter );
+										 openTokenPos, iter, operatorIter, optional );
 		}
 		else
 		{
@@ -387,7 +393,7 @@ bool BFFParser::ParseVariableDeclaration( BFFIterator & iter, const BFFIterator 
 		if ( iter.ParseToMatchingBrace( openToken, closeToken ) )
 		{
 			result = StoreVariableStruct( varNameStart.GetCurrent(), varNameEnd.GetCurrent(), 
-										  openTokenPos, iter, operatorIter );
+										  openTokenPos, iter, operatorIter, optional );
 		}
 		else
 		{
@@ -401,7 +407,7 @@ bool BFFParser::ParseVariableDeclaration( BFFIterator & iter, const BFFIterator 
 		if ( *iter == closeToken )
 		{
 			result = StoreVariableString( varNameStart.GetCurrent(), varNameEnd.GetCurrent(), 
-										  openTokenPos, iter, operatorIter );
+										  openTokenPos, iter, operatorIter, optional );
 		}
 		else		
 		{
@@ -874,18 +880,24 @@ bool BFFParser::ParseImportDirective( const BFFIterator & directiveStart, BFFIte
 //------------------------------------------------------------------------------
 bool BFFParser::StoreVariableString( const char * varNameStart, const char * varNameEnd, 
 									 const BFFIterator & valueStart, const BFFIterator & valueEnd,
-									 const BFFIterator & operatorIter )
+									 const BFFIterator & operatorIter, bool optional )
 {
+	ASSERT( varNameStart );
+	ASSERT( varNameEnd );
+	AStackString< MAX_VARIABLE_NAME_LENGTH > name( varNameStart, varNameEnd );
+
+	if ( optional && BFFStackFrame::GetVar( name ) != nullptr )
+	{
+		FLOG_INFO( "Skipped registration of optional <String> variable '%s'", name.Get() );
+		return true;
+	}
+
 	// unescape and subsitute embedded variables
 	AStackString< 2048 > value;
 	if ( PerformVariableSubstitutions( valueStart, valueEnd, value ) == false )
 	{
 		return false;
 	}
-
-	ASSERT( varNameStart );
-	ASSERT( varNameEnd );
-	AStackString< MAX_VARIABLE_NAME_LENGTH > name( varNameStart, varNameEnd );
 
 	// are we concatenating?
 	const BFFVariable * varToConcat = nullptr;
@@ -938,11 +950,17 @@ bool BFFParser::StoreVariableString( const char * varNameStart, const char * var
 //------------------------------------------------------------------------------
 bool BFFParser::StoreVariableArray( const char * varNameStart, const char * varNameEnd, 
 									const BFFIterator & valueStart, const BFFIterator & valueEnd,
-									const BFFIterator & operatorIter )
+									const BFFIterator & operatorIter, bool optional )
 {
 	ASSERT( varNameStart );
 	ASSERT( varNameEnd );
 	AStackString< MAX_VARIABLE_NAME_LENGTH > name( varNameStart, varNameEnd );
+
+	if ( optional && BFFStackFrame::GetVar( name ) != nullptr )
+	{
+		FLOG_INFO( "Skipped registration of optional <Array> variable '%s'", name.Get() );
+		return true;
+	}
 
 	Array< AString > values( 32, true );
 	Array< const BFFVariable * > structValues( 32, true );
@@ -1130,11 +1148,17 @@ bool BFFParser::StoreVariableArray( const char * varNameStart, const char * varN
 //------------------------------------------------------------------------------
 bool BFFParser::StoreVariableStruct( const char * varNameStart, const char * varNameEnd, 
 									 const BFFIterator & valueStart, const BFFIterator & valueEnd,
-									 const BFFIterator & operatorIter )
+									 const BFFIterator & operatorIter, bool optional )
 {
 	ASSERT( varNameStart );
 	ASSERT( varNameEnd );
 	AStackString< MAX_VARIABLE_NAME_LENGTH > name( varNameStart, varNameEnd );
+
+	if ( optional && BFFStackFrame::GetVar( name ) != nullptr )
+	{
+		FLOG_INFO( "Skipped registration of optional <Struct> variable '%s'", name.Get() );
+		return true;
+	}
 
 	// are we concatenating?
 	if ( *operatorIter == BFF_VARIABLE_CONCATENATION )
@@ -1169,10 +1193,19 @@ bool BFFParser::StoreVariableStruct( const char * varNameStart, const char * var
 
 // StoreVariableBool
 //------------------------------------------------------------------------------
-bool BFFParser::StoreVariableBool( const char * varNameStart, const char * varNameEnd, bool value )
+bool BFFParser::StoreVariableBool( const char * varNameStart, const char * varNameEnd, bool value, bool optional )
 {
-	// Register this variable
+	ASSERT( varNameStart );
+	ASSERT( varNameEnd );
 	AStackString< MAX_VARIABLE_NAME_LENGTH > name( varNameStart, varNameEnd );
+
+	if ( optional && BFFStackFrame::GetVar( name ) != nullptr )
+	{
+		FLOG_INFO( "Skipped registration of optional <Bool> variable '%s'", name.Get() );
+		return true;
+	}
+
+	// Register this variable
 	BFFStackFrame::SetVarBool( name, value );
 
 	FLOG_INFO( "Registered <bool> variable '%s' with value '%s'", name.Get(), value ? "true" : "false" );
@@ -1182,9 +1215,18 @@ bool BFFParser::StoreVariableBool( const char * varNameStart, const char * varNa
 
 // StoreVariableInt
 //------------------------------------------------------------------------------
-bool BFFParser::StoreVariableInt( const char * varNameStart, const char * varNameEnd, int value )
+bool BFFParser::StoreVariableInt( const char * varNameStart, const char * varNameEnd, int value, bool optional )
 {
+	ASSERT( varNameStart );
+	ASSERT( varNameEnd );
 	AStackString< MAX_VARIABLE_NAME_LENGTH > name( varNameStart, varNameEnd );
+
+	if ( optional && BFFStackFrame::GetVar( name ) != nullptr )
+	{
+		FLOG_INFO( "Skipped registration of optional <Int> variable '%s'", name.Get() );
+		return true;
+	}
+
 	BFFStackFrame::SetVarInt( name, value );
 
 	FLOG_INFO( "Registered <int> variable '%s' with value '%i'", name.Get(), value );
@@ -1196,12 +1238,20 @@ bool BFFParser::StoreVariableInt( const char * varNameStart, const char * varNam
 //------------------------------------------------------------------------------
 bool BFFParser::StoreVariableToVariable( const char * varNameDstStart, const char * varNameDstEnd,
 						  				 const BFFIterator & varNameSrcStart, const BFFIterator & varNameSrcEnd,
-										 const BFFIterator & operatorIter )
+										 const BFFIterator & operatorIter, bool optional )
 {
-	// find vars
+	// find destination variable
 	AStackString<> dstName( varNameDstStart, varNameDstEnd );
-	AStackString<> srcName( varNameSrcStart.GetCurrent(), varNameSrcEnd.GetCurrent() );
 	const BFFVariable * varDst = BFFStackFrame::GetVar( dstName );
+
+	if ( optional && varDst != nullptr )
+	{
+		FLOG_INFO( "Skipped registration of optional variable '%s'", dstName.Get() );
+		return true;
+	}
+
+	// find source variable
+	AStackString<> srcName( varNameSrcStart.GetCurrent(), varNameSrcEnd.GetCurrent() );
 	const BFFVariable * varSrc = BFFStackFrame::GetVar( srcName );
 
 	// src var unknown?

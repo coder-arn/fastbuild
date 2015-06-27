@@ -38,6 +38,7 @@ public:
 	enum { BFF_COMMENT_SLASH = '/' };
 	enum { BFF_DECLARE_VAR_INTERNAL = '.' };
 	enum { BFF_VARIABLE_ASSIGNMENT = '=' };
+	enum { BFF_VARIABLE_ASSIGNMENT_OPTIONAL = '?' };
 	enum { BFF_VARIABLE_CONCATENATION = '+' };
 	enum { BFF_START_ARRAY = '{' };
 	enum { BFF_END_ARRAY = '}' };
@@ -69,14 +70,14 @@ private:
 	bool CheckIfCondition( const BFFIterator & conditionStart, const BFFIterator & conditionEnd, bool & result );
 	bool ParseImportDirective( const BFFIterator & directiveStart, BFFIterator & iter );
 
-	bool StoreVariableString( const char * varNameStart, const char * varNameEnd, const BFFIterator & valueStart, const BFFIterator & valueEnd, const BFFIterator & operatorIter );
-	bool StoreVariableArray( const char * varNameStart, const char * varNameEnd, const BFFIterator & valueStart, const BFFIterator & valueEnd, const BFFIterator & operatorIter );
-	bool StoreVariableStruct( const char * varNameStart, const char * varNameEnd, const BFFIterator & valueStart, const BFFIterator & valueEnd, const BFFIterator & operatorIter );
-	bool StoreVariableBool( const char * varNameStart, const char * varNameEnd, bool value );
-	bool StoreVariableInt( const char * varNameStart, const char * varNameEnd, int value );
+	bool StoreVariableString( const char * varNameStart, const char * varNameEnd, const BFFIterator & valueStart, const BFFIterator & valueEnd, const BFFIterator & operatorIter, bool optional = false );
+	bool StoreVariableArray( const char * varNameStart, const char * varNameEnd, const BFFIterator & valueStart, const BFFIterator & valueEnd, const BFFIterator & operatorIter, bool optional = false );
+	bool StoreVariableStruct( const char * varNameStart, const char * varNameEnd, const BFFIterator & valueStart, const BFFIterator & valueEnd, const BFFIterator & operatorIter, bool optional = false );
+	bool StoreVariableBool( const char * varNameStart, const char * varNameEnd, bool value, bool optional = false );
+	bool StoreVariableInt( const char * varNameStart, const char * varNameEnd, int value, bool optional = false );
 	bool StoreVariableToVariable( const char * varNameDstStart, const char * varNameDstEnd,
 						  		  const BFFIterator & varNameSrcStart, const BFFIterator & varNameSrcEnd,
-								  const BFFIterator & operatorIter );
+								  const BFFIterator & operatorIter, bool optional = false );
 	// store the last seen variable
 	bool m_SeenAVariable;
 	BFFIterator m_LastVarNameStart;

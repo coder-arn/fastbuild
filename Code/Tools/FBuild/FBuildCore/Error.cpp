@@ -303,8 +303,9 @@
 	const char * operation  = "???"; // should never be used
 	switch ( *operatorIter )
 	{
-		case BFFParser::BFF_VARIABLE_ASSIGNMENT:	operation = "="; break;
-		case BFFParser::BFF_VARIABLE_CONCATENATION: operation = "+"; break;
+		case BFFParser::BFF_VARIABLE_ASSIGNMENT:			operation = "="; break;
+		case BFFParser::BFF_VARIABLE_ASSIGNMENT_OPTIONAL:	operation = "?"; break;
+		case BFFParser::BFF_VARIABLE_CONCATENATION: 		operation = "+"; break;
 		default:									ASSERT( false ); break;
 	}
 
