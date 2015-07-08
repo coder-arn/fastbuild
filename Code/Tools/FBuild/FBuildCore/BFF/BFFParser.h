@@ -66,7 +66,7 @@ private:
 	bool ParseIncludeDirective( BFFIterator & iter );
 	bool ParseDefineDirective( const BFFIterator & directiveStart, BFFIterator & iter );
 	bool ParseUndefDirective( const BFFIterator & directiveStart, BFFIterator & iter );
-	bool ParseIfDirective( const BFFIterator & directiveStart, BFFIterator & iter );
+	bool ParseIfDirective( const BFFIterator & directiveStart, BFFIterator & iter, bool negate );
 	bool ParseEndIfDirective( const BFFIterator & directiveStart );
 	bool CheckIfCondition( const BFFIterator & conditionStart, const BFFIterator & conditionEnd, bool & result );
 	bool ParseImportDirective( const BFFIterator & directiveStart, BFFIterator & iter );

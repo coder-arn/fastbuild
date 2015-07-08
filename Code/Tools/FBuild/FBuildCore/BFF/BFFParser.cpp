@@ -599,9 +599,13 @@ bool BFFParser::ParsePreprocessorDirective( BFFIterator & iter )
 	{
 		return ParseUndefDirective( directiveStart, iter );
 	}
-	else if ( directive == "if" )
+	else if ( directive == "if" || directive == "ifdef" )
 	{
-		return ParseIfDirective( directiveStart, iter );
+		return ParseIfDirective( directiveStart, iter, false );
+	}
+	else if ( directive == "ifndef" )
+	{
+		return ParseIfDirective( directiveStart, iter, true );
 	}
 	else if ( directive == "endif" )
 	{
@@ -758,7 +762,7 @@ bool BFFParser::ParseUndefDirective( const BFFIterator & directiveStart, BFFIter
 
 // ParseIfDirective
 //------------------------------------------------------------------------------
-bool BFFParser::ParseIfDirective( const BFFIterator & directiveStart, BFFIterator & iter )
+bool BFFParser::ParseIfDirective( const BFFIterator & directiveStart, BFFIterator & iter, bool negate )
 {
 	if ( iter.IsAtEnd() )
 	{
@@ -782,6 +786,10 @@ bool BFFParser::ParseIfDirective( const BFFIterator & directiveStart, BFFIterato
 	{
 		return false; // CheckIfCondition will have emitted an error
 	}
+
+	// #ifndef ?
+	if ( negate )
+		result = !( result );
 
 	if ( result )
 	{
