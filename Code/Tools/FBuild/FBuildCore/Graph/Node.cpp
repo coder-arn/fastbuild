@@ -25,6 +25,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/NodeProxy.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectListNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/ObjectNode.h"
+#include "Tools/FBuild/FBuildCore/Graph/RemoveDirNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/TestNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/UnityNode.h"
 #include "Tools/FBuild/FBuildCore/Graph/VCXProjectNode.h"
@@ -46,7 +47,7 @@
 
 // Static Data
 //------------------------------------------------------------------------------
-/*static*/ const char * const Node::s_NodeTypeNames[] = 
+/*static*/ const char * const Node::s_NodeTypeNames[Node::NUM_NODE_TYPES] = 
 {
 	"Proxy",
 	"Copy",
@@ -64,7 +65,8 @@
 	"DLL",
 	"VCXProj",
 	"ObjectList",
-	"CopyDirNode"
+	"CopyDirNode",
+	"RemoveDirNode"
 };
 
 // Custom MetaData
@@ -418,6 +420,7 @@ void Node::SaveNode( IOStream & fileStream, const Node * node ) const
 		case Node::VCXPROJECT_NODE:		n = VCXProjectNode::Load( stream );		break;
 		case Node::OBJECT_LIST_NODE:	n = ObjectListNode::Load( stream );		break;
 		case Node::COPY_DIR_NODE:		n = CopyDirNode::Load( stream );		break;
+		case Node::REMOVE_DIR_NODE:		n = RemoveDirNode::Load( stream );		break;
 		case Node::NUM_NODE_TYPES:		ASSERT( false );						break;
 	}
 
