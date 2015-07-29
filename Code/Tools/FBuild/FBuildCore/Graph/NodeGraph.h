@@ -35,6 +35,7 @@ class LinkerNode;
 class Node;
 class ObjectListNode;
 class ObjectNode;
+class RemoveDirNode;
 class SLNNode;
 class TestNode;
 class UnityNode;
@@ -94,6 +95,9 @@ public:
 									 Dependencies & staticDeps,
 									 const AString & destPath,
 									 const Dependencies & preBuildDependencies );
+	RemoveDirNode * CreateRemoveDirNode(const AString & nodeName,
+									 	Dependencies & staticDeps,
+									 	const Dependencies & preBuildDependencies );
 	ExecNode * CreateExecNode( const AString & dstFileName, 
 							   FileNode * sourceFile, 
 							   FileNode * executable, 

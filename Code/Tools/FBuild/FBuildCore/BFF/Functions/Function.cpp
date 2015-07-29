@@ -19,6 +19,7 @@
 #include "FunctionLibrary.h"
 #include "FunctionObjectList.h"
 #include "FunctionPrint.h"
+#include "FunctionRemoveDir.h"
 #include "FunctionSettings.h"
 #include "FunctionSLN.h"
 #include "FunctionTest.h"
@@ -117,6 +118,7 @@ Function::~Function()
 	FNEW( FunctionForEach );
 	FNEW( FunctionLibrary );
 	FNEW( FunctionPrint );
+	FNEW( FunctionRemoveDir );
 	FNEW( FunctionSettings );
 	FNEW( FunctionSLN );
 	FNEW( FunctionTest );
@@ -390,7 +392,7 @@ bool Function::GetInt( const BFFIterator & iter, int32_t & var, const char * nam
 // GetNodeList
 //------------------------------------------------------------------------------
 bool Function::GetNodeList( const BFFIterator & iter, const char * name, Dependencies & nodes, bool required,
-							bool allowCopyDirNodes, bool allowUnityNodes ) const
+							bool allowCopyDirNodes, bool allowUnityNodes, bool allowRemoveDirNodes ) const
 {
 	ASSERT( name );
 
@@ -421,7 +423,7 @@ bool Function::GetNodeList( const BFFIterator & iter, const char * name, Depende
 				return false;
 			}
 
-			if ( !GetNodeListRecurse( iter, name, nodes, *it, allowCopyDirNodes, allowUnityNodes ) )
+			if ( !GetNodeListRecurse( iter, name, nodes, *it, allowCopyDirNodes, allowUnityNodes, allowRemoveDirNodes ) )
 			{
 				// child func will have emitted error
 				return false;
@@ -436,7 +438,7 @@ bool Function::GetNodeList( const BFFIterator & iter, const char * name, Depende
 			return false;
 		}
 
-		if ( !GetNodeListRecurse( iter, name, nodes, var->GetString(), allowCopyDirNodes, allowUnityNodes ) )
+		if ( !GetNodeListRecurse( iter, name, nodes, var->GetString(), allowCopyDirNodes, allowUnityNodes, allowRemoveDirNodes ) )
 		{
 			// child func will have emitted error
 			return false;
@@ -579,7 +581,7 @@ bool Function::GetObjectListNodes( const BFFIterator & iter,
 // GetNodeListRecurse
 //------------------------------------------------------------------------------
 bool Function::GetNodeListRecurse( const BFFIterator & iter, const char * name, Dependencies & nodes, const AString & nodeName,
-								   bool allowCopyDirNodes, bool allowUnityNodes ) const
+								   bool allowCopyDirNodes, bool allowUnityNodes, bool allowRemoveDirNodes ) const
 {
 	NodeGraph & ng = FBuild::Get().GetDependencyGraph();
 
@@ -620,6 +622,16 @@ bool Function::GetNodeListRecurse( const BFFIterator & iter, const char * name, 
 			return true;
 		}
 	}
+	if ( allowRemoveDirNodes )
+	{
+		// found - is it a RemoveDirNode?
+		if ( n->GetType() == Node::REMOVE_DIR_NODE )
+		{
+			// use as-is
+			nodes.Append( Dependency( n ) );
+			return true;
+		}
+	}
 	if ( allowUnityNodes )
 	{
 		// found - is it an ObjectList?
@@ -641,7 +653,7 @@ bool Function::GetNodeListRecurse( const BFFIterator & iter, const char * name, 
 			// TODO:C by passing as string we'll be looking up again for no reason
 			const AString & subName = it->GetNode()->GetName();
 
-			if ( !GetNodeListRecurse( iter, name, nodes, subName, allowCopyDirNodes, allowUnityNodes ) )
+			if ( !GetNodeListRecurse( iter, name, nodes, subName, allowCopyDirNodes, allowUnityNodes, allowRemoveDirNodes ) )
 			{
 				return false;
 			}
