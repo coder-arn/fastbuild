@@ -39,6 +39,7 @@ public:
 	enum { BFF_COMMENT_SLASH = '/' };
 	enum { BFF_DECLARE_VAR_INTERNAL = '.' };
 	enum { BFF_VARIABLE_ASSIGNMENT = '=' };
+	enum { BFF_VARIABLE_ASSIGNMENT_OPTIONAL = '?' };
 	enum { BFF_VARIABLE_CONCATENATION = '+' };
 	enum { BFF_START_ARRAY = '{' };
 	enum { BFF_END_ARRAY = '}' };
@@ -70,12 +71,12 @@ private:
 	bool CheckIfCondition( const BFFIterator & conditionStart, const BFFIterator & conditionEnd, bool & result );
 	bool ParseImportDirective( const BFFIterator & directiveStart, BFFIterator & iter );
 
-	bool StoreVariableString( const AString & name, const BFFIterator & valueStart, const BFFIterator & valueEnd, const BFFIterator & operatorIter );
-	bool StoreVariableArray( const AString & name, const BFFIterator & valueStart, const BFFIterator & valueEnd, const BFFIterator & operatorIter );
-	bool StoreVariableStruct( const AString & name, const BFFIterator & valueStart, const BFFIterator & valueEnd, const BFFIterator & operatorIter );
-	bool StoreVariableBool( const AString & name, bool value );
-	bool StoreVariableInt( const AString & name, int value );
-	bool StoreVariableToVariable( const AString & dstName, BFFIterator & varNameSrcStart, const BFFIterator & operatorIter );
+	bool StoreVariableString( const AString & name, const BFFIterator & valueStart, const BFFIterator & valueEnd, const BFFIterator & operatorIter, bool optional = false );
+	bool StoreVariableArray( const AString & name, const BFFIterator & valueStart, const BFFIterator & valueEnd, const BFFIterator & operatorIter, bool optional = false );
+	bool StoreVariableStruct( const AString & name, const BFFIterator & valueStart, const BFFIterator & valueEnd, const BFFIterator & operatorIter, bool optional = false );
+	bool StoreVariableBool( const AString & name, bool value, bool optional = false );
+	bool StoreVariableInt( const AString & name, int value, bool optional = false );
+	bool StoreVariableToVariable( const AString & dstName, BFFIterator & varNameSrcStart, const BFFIterator & operatorIter, bool optional = false );
 	// store the last seen variable
 	bool m_SeenAVariable;
 	AStackString< MAX_VARIABLE_NAME_LENGTH > m_LastVarName;
