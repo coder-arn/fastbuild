@@ -241,6 +241,14 @@ const BFFVariable * BFFStackFrame::GetVariableRecurse( const AString & name ) co
 	return nullptr;
 }
 
+// GetLocalVar
+//------------------------------------------------------------------------------
+const BFFVariable * BFFStackFrame::GetLocalVar( const AString & name ) const
+{
+	// look at this scope level
+	return GetVarNoRecurse( name );
+}
+
 // GetVarAny
 //------------------------------------------------------------------------------
 /*static*/ const BFFVariable * BFFStackFrame::GetVarAny( const AString & name )
@@ -285,6 +293,26 @@ const BFFVariable * BFFStackFrame::GetVariableRecurse( const AString & nameOnly,
 	}
 
 	// not found
+	return nullptr;
+}
+
+// GetVarNoRecurse
+//------------------------------------------------------------------------------
+const BFFVariable * BFFStackFrame::GetVarNoRecurse( const AString & name ) const
+{
+	ASSERT( s_StackHead ); // we shouldn't be calling this if there aren't any stack frames
+
+	// look at this scope level
+	Array< BFFVariable * >::Iter i = m_Variables.Begin();
+	Array< BFFVariable * >::Iter end = m_Variables.End();
+	for( ; i < end ; ++i )
+	{
+		if ( ( *i )->GetName() == name )
+		{
+			return *i;
+		}
+	}
+
 	return nullptr;
 }
 

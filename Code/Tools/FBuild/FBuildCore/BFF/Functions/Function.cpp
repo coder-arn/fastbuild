@@ -14,6 +14,7 @@
 #include "FunctionDLL.h"
 #include "FunctionExec.h"
 #include "FunctionExecutable.h"
+#include "FunctionExport.h"
 #include "FunctionForEach.h"
 #include "FunctionLibrary.h"
 #include "FunctionObjectList.h"
@@ -112,6 +113,7 @@ Function::~Function()
 	FNEW( FunctionDLL );
 	FNEW( FunctionExec );
 	FNEW( FunctionExecutable );
+	FNEW( FunctionExport );
 	FNEW( FunctionForEach );
 	FNEW( FunctionLibrary );
 	FNEW( FunctionPrint );
