@@ -31,7 +31,7 @@ public:
 	#endif
 
 private:
-	void AddInclude( const char * begin, const char * end );
+	void AddInclude( const char * begin, const char * end, bool exists = true );
 
 	// temporary data
 	uint32_t			m_LastCRC1;

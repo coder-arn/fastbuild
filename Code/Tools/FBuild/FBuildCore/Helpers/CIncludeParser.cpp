@@ -11,6 +11,7 @@
 #include "Tools/FBuild/FBuildCore/Graph/NodeGraph.h"
 
 // Core
+#include "Core/FileIO/FileIO.h"
 #include "Core/FileIO/PathUtils.h"
 #include "Core/Math/Murmur3.h"
 #include "Core/Strings/AStackString.h"
@@ -131,7 +132,7 @@ bool CIncludeParser::ParseMSCL_Output( const char * compilerOutput,
 
 		if ( validated )
 		{
-			AddInclude( includeStart, includeEnd );
+			AddInclude( includeStart, includeEnd, false );
 		}
 	}
 
@@ -300,7 +301,7 @@ void CIncludeParser::SwapIncludes( Array< AString > & includes )
 
 // AddInclude
 //------------------------------------------------------------------------------
-void CIncludeParser::AddInclude( const char * begin, const char * end )
+void CIncludeParser::AddInclude( const char * begin, const char * end, bool exists )
 {
 	#ifdef DEBUG
 		m_NonUniqueCount++;
@@ -323,6 +324,12 @@ void CIncludeParser::AddInclude( const char * begin, const char * end )
 	AStackString< 256 > include( begin, end );
 	AStackString< 256 > cleanInclude;
 	NodeGraph::CleanPath( include, cleanInclude );
+
+	// ignore include if file does not exists
+	if ( false == exists && // only when not sure about parsed include
+		 false == FileIO::FileExists( cleanInclude.Get() ) )
+		return;
+
 	#if defined( __WINDOWS__ ) || defined( __OSX__ )
 		// Windows and OSX are case-insensitive
 		AStackString<> lowerCopy( cleanInclude );
