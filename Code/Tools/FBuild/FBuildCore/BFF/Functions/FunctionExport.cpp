@@ -58,20 +58,11 @@ FunctionExport::FunctionExport()
         start++;
         start.SkipWhiteSpace();
 
-        // a variable name?
-        const char c = *start;
-        if ( c != BFFParser::BFF_DECLARE_VAR_INTERNAL )
-        {
-            Error::Error_1007_ExpectedVariable( start, this ); 
-            return false;
-        }
-
-        // find variable name
-        BFFIterator stop( start );
-        stop++;
-        stop.SkipVariableName();
-        ASSERT( stop.GetCurrent() <= functionHeaderStopToken->GetCurrent() ); // should not be in this function if strings are not validly terminated
-        AStackString<> varName( start.GetCurrent(), stop.GetCurrent() );
+		AStackString< BFFParser::MAX_VARIABLE_NAME_LENGTH > varName;
+		if ( BFFParser::ParseVariableName( start, varName ) == false )
+		{
+			return false;
+		}
 
         // we want 1 frame above this function
         BFFStackFrame * currentFrame = BFFStackFrame::GetCurrent()->GetParent();
