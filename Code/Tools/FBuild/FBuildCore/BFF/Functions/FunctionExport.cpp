@@ -58,11 +58,11 @@ FunctionExport::FunctionExport()
         start++;
         start.SkipWhiteSpace();
 
-		AStackString< BFFParser::MAX_VARIABLE_NAME_LENGTH > varName;
-		if ( BFFParser::ParseVariableName( start, varName ) == false )
-		{
-			return false;
-		}
+        AStackString< BFFParser::MAX_VARIABLE_NAME_LENGTH > varName;
+        if ( BFFParser::ParseVariableName( start, varName ) == false )
+        {
+            return false;
+        }
 
         // we want 1 frame above this function
         BFFStackFrame * currentFrame = BFFStackFrame::GetCurrent()->GetParent();
